@@ -4,6 +4,7 @@ import { FormInput } from '../components/FormInput'
 import EmptyState from '../components/EmptyState'
 import { generateId } from '../utils/helpers'
 import type { Category } from '../types'
+import { addCategory } from '@/services/api'
 
 interface Props {
   categories: Category[]
@@ -20,10 +21,10 @@ export default function CategoriesPage({ categories, setCategories, showToast }:
     setLoading(true)
 
     // ── SWAP: uncomment to use real API ──
-    // addCategory(form)
-    //   .then((res) => setCategories((p) => [...p, res.data]))
-    //   .catch(() => showToast('Failed to add category', 'error'))
-    //   .finally(() => setLoading(false))
+     addCategory(form)
+       .then((res) => setCategories((p) => [...p, res.data]))
+       .catch(() => showToast('Failed to add category', 'error'))
+       .finally(() => setLoading(false))
 
     setTimeout(() => {
       setCategories((p) => [...p, { id: generateId(), ...form }])

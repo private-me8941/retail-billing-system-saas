@@ -22,19 +22,25 @@ const API = axios.create({
 // Auto-attach JWT token to every request
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
+
+  // ❌ Skip token for public routes
+  const publicRoutes = ['/register', '/login']
+
+  if (token && !publicRoutes.some(route => config.url?.includes(route))) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+
   return config
-})
-//
+})//
 // ── AUTH ──────────────────────────────────────
 //
 export const registerUser = async (data: {
   name: string; email: string; password: string
-}) => API.post('/auth/register', data)
+}) => API.post('/register', data)
 
 export const loginUser = async (data: {
   email: string; password: string
-}) => API.post('/auth/login', data)
+}) => API.post('/login', data)
 //
 // export const forgotPassword = async (data: {
 //   email: string; newPassword: string
@@ -45,12 +51,12 @@ export const loginUser = async (data: {
 // export const getCategories = async () =>
 //   API.get('/categories')
 //
-// export const addCategory = async (data: {
-//   categoryName: string; description: string
-// }) => API.post('/categories', data)
-//
-// export const deleteCategory = async (id: number) =>
-//   API.delete(`/categories/${id}`)
+export const addCategory = async (data: {
+   categoryName: string; description: string
+ }) => API.post('/admin/category', data)
+
+export const deleteCategory = async (id: number) =>
+  API.delete(`/categories/${id}`)
 //
 // ── ITEMS ─────────────────────────────────────
 //
