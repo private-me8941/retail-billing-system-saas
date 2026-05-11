@@ -48,39 +48,39 @@ export const loginUser = async (data: {
 //
 // ── CATEGORIES ────────────────────────────────
 //
-// export const getCategories = async () =>
-//   API.get('/categories')
-//
+export const getCategories = async () =>
+  API.get('/categories')
+
 export const addCategory = async (data: {
    categoryName: string; description: string
  }) => API.post('/admin/category', data)
 
 export const deleteCategory = async (id: number) =>
-  API.delete(`/categories/${id}`)
-//
+  API.delete(`/admin/category/${id}`)
+
 // ── ITEMS ─────────────────────────────────────
 //
-// export const getItems = async () =>
-//   API.get('/items')
-//
-// export const addItem = async (data: {
-//   itemName: string; price: number; quantity: number; categoryName: string
-// }) => API.post('/items', data)
-//
-// export const deleteItem = async (id: number) =>
-//   API.delete(`/items/${id}`)
+export const getItems = async () =>
+  API.get('/items')
+
+export const addItem = async (data: {
+  itemName: string; price: number; quantity: number; categoryId: number
+}) => API.post('/admin/item', data)
+
+export const deleteItem = async (id: number) =>
+  API.delete(`/admin/item/${id}`)
 //
 // ── BILLS ─────────────────────────────────────
 //
-// export const createBill = async (data: {
-//   items: { itemName: string; qty: number; price: number }[]
-//   totalAmount: number
-// }) => API.post('/bills', data)
-//
-// export const getBills = async () =>
-//   API.get('/bills')
-//
-// export const getBillById = async (id: number) =>
-//   API.get(`/bills/${id}`)
+export const createBill = async (data: {
+  items: { itemName: string; qty: number; price: number }[]
+  // totalAmount: number
+}) => API.post('/bill', data)
+
+export const getBills = async () =>
+  API.get('/bills')
+
+export const getBillById = async (id: number) =>
+  API.get(`/bills/${id}`)
 
 export {} // keep module valid until uncommented

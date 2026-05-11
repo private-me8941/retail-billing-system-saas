@@ -4,7 +4,7 @@ import { FormInput } from '../components/FormInput'
 import ToastContainer from '../components/ToastContainer'
 import { useToast } from '../hooks/useToast'
 import type { AuthView } from '../types'
-import { registerUser } from '@/services/api'
+import { registerUser } from '../services/api'
 
 interface Props { onNavigate: (v: AuthView) => void }
 

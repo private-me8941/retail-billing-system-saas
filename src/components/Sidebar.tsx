@@ -66,7 +66,7 @@ export default function Sidebar({ page, setPage, open, onClose }: Props) {
               A
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-ink-800 truncate">Admin User</p>
+              <p className="text-sm font-semibold text-ink-800 truncate">Admin </p>
               <p className="text-[11px] text-ink-400 truncate">admin@retail.com</p>
             </div>
           </div>

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Plus, Minus, Trash2, Search, ShoppingCart, ReceiptText, Package } from 'lucide-react'
 import EmptyState from '../components/EmptyState'
-import { handleImgError, formatCurrency, applyTax, getTax, today, generateId } from '../utils/helpers'
+import { handleImgError, formatCurrency, applyTax, getTax } from '../utils/helpers'
+import { FALLBACK_IMAGE } from '../constants'
 import type { Item, Bill, CartItem } from '../types'
+import { createBill } from '../services/api'
 
 interface Props {
   items: Item[]
@@ -11,14 +13,14 @@ interface Props {
 }
 
 export default function BillingPage({ items, setBills, showToast }: Props) {
-  const [cart, setCart]     = useState<CartItem[]>([])
-  const [search, setSearch] = useState('')
+  const [cart, setCart]       = useState<CartItem[]>([])
+  const [search, setSearch]   = useState('')
   const [loading, setLoading] = useState(false)
 
   const filtered = items.filter((i) => i.itemName.toLowerCase().includes(search.toLowerCase()))
-  const subtotal  = cart.reduce((s, c) => s + c.price * c.qty, 0)
-  const tax       = getTax(subtotal)
-  const total     = applyTax(subtotal)
+  const subtotal = cart.reduce((s, c) => s + c.price * c.qty, 0)
+  const tax      = getTax(subtotal)
+  const total    = applyTax(subtotal)
 
   const addToCart = (item: Item) => {
     setCart((p) => {
@@ -37,25 +39,17 @@ export default function BillingPage({ items, setBills, showToast }: Props) {
     if (cart.length === 0) { showToast('Cart is empty', 'error'); return }
     setLoading(true)
 
-    const newBill: Bill = {
-      billId: generateId() % 9000 + 1000,
-      date: today(),
-      totalAmount: total,
+    createBill({
       items: cart.map((c) => ({ itemName: c.itemName, qty: c.qty, price: c.price })),
-    }
-
-    // ── SWAP: uncomment to use real API ──
-    // createBill({ items: newBill.items, totalAmount: newBill.totalAmount })
-    //   .then((res) => { setBills((p) => [res.data, ...p]); setCart([]); showToast(`Bill #${res.data.billId} generated!`) })
-    //   .catch(() => showToast('Failed to generate bill', 'error'))
-    //   .finally(() => setLoading(false))
-
-    setTimeout(() => {
-      setBills((p) => [newBill, ...p])
-      setCart([])
-      setLoading(false)
-      showToast(`Bill #${newBill.billId} generated! ${formatCurrency(total)}`)
-    }, 800)
+      // totalAmount: total,
+    })
+      .then((res) => {
+        setBills((p) => [res.data, ...p])
+        setCart([])
+        showToast(`Bill #${res.data.billId} generated! ${formatCurrency(total)}`)
+      })
+      .catch(() => showToast('Failed to generate bill', 'error'))
+      .finally(() => setLoading(false))
   }
 
   return (
@@ -63,13 +57,11 @@ export default function BillingPage({ items, setBills, showToast }: Props) {
 
       {/* LEFT — Products */}
       <div className="flex flex-col gap-3 overflow-hidden">
-        {/* Search */}
         <div className="relative">
           <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-300" />
           <input className="form-input pl-10" placeholder="Search products…" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
 
-        {/* Product grid */}
         <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 content-start pr-1">
           {filtered.length === 0 ? (
             <div className="col-span-full">
@@ -79,7 +71,12 @@ export default function BillingPage({ items, setBills, showToast }: Props) {
             filtered.map((item) => (
               <div key={item.id} className="item-card group" onClick={() => addToCart(item)}>
                 <div className="h-[112px] overflow-hidden bg-ink-50">
-                  <img src={item.image} alt={item.itemName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onError={handleImgError} />
+                  <img
+                    src={item.image ?? FALLBACK_IMAGE}
+                    alt={item.itemName}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={handleImgError}
+                  />
                 </div>
                 <div className="p-3">
                   <p className="font-semibold text-sm text-ink-900 truncate mb-2">{item.itemName}</p>
@@ -98,7 +95,6 @@ export default function BillingPage({ items, setBills, showToast }: Props) {
 
       {/* RIGHT — Cart */}
       <div className="card flex flex-col overflow-hidden">
-        {/* Cart header */}
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-ink-100">
           <h3 className="section-title flex items-center gap-2">
             <ShoppingCart size={16} className="text-brand-500" />
@@ -106,20 +102,27 @@ export default function BillingPage({ items, setBills, showToast }: Props) {
             {cart.length > 0 && <span className="badge badge-orange text-[11px] ml-1">{cart.length}</span>}
           </h3>
           {cart.length > 0 && (
-            <button className="text-xs text-red-500 font-semibold bg-red-50 border border-red-200 px-2.5 py-1 rounded-lg cursor-pointer hover:bg-red-100 transition-colors" onClick={() => setCart([])}>
+            <button
+              className="text-xs text-red-500 font-semibold bg-red-50 border border-red-200 px-2.5 py-1 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
+              onClick={() => setCart([])}
+            >
               Clear all
             </button>
           )}
         </div>
 
-        {/* Cart items */}
         <div className="flex-1 overflow-y-auto flex flex-col gap-2">
           {cart.length === 0 ? (
             <EmptyState icon={ShoppingCart} title="Cart is empty" description="Click any product to add it" />
           ) : (
             cart.map((c) => (
               <div key={c.id} className="flex items-center gap-2.5 bg-ink-50 rounded-xl p-2.5 border border-ink-100">
-                <img src={c.image} alt={c.itemName} className="w-11 h-11 rounded-lg object-cover flex-shrink-0 border border-ink-100" onError={handleImgError} />
+                <img
+                  src={c.image ?? FALLBACK_IMAGE}
+                  alt={c.itemName}
+                  className="w-11 h-11 rounded-lg object-cover flex-shrink-0 border border-ink-100"
+                  onError={handleImgError}
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-ink-800 truncate">{c.itemName}</p>
                   <p className="text-xs text-brand-500 font-bold mt-0.5">{formatCurrency(c.price)} × {c.qty}</p>
@@ -141,7 +144,6 @@ export default function BillingPage({ items, setBills, showToast }: Props) {
           )}
         </div>
 
-        {/* Bill summary */}
         <div className="border-t border-ink-100 pt-4 mt-3">
           <div className="bg-ink-50 rounded-xl p-3.5 mb-4 flex flex-col gap-2 border border-ink-100">
             <div className="flex justify-between text-sm text-ink-500">

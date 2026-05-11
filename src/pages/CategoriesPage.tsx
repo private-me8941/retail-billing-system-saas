@@ -2,9 +2,8 @@ import { useState } from 'react'
 import { Plus, Trash2, Tag } from 'lucide-react'
 import { FormInput } from '../components/FormInput'
 import EmptyState from '../components/EmptyState'
-import { generateId } from '../utils/helpers'
 import type { Category } from '../types'
-import { addCategory } from '@/services/api'
+import { addCategory, deleteCategory } from '../services/api'
 
 interface Props {
   categories: Category[]
@@ -20,26 +19,23 @@ export default function CategoriesPage({ categories, setCategories, showToast }:
     if (!form.categoryName.trim()) { showToast('Category name is required', 'error'); return }
     setLoading(true)
 
-    // ── SWAP: uncomment to use real API ──
-     addCategory(form)
-       .then((res) => setCategories((p) => [...p, res.data]))
-       .catch(() => showToast('Failed to add category', 'error'))
-       .finally(() => setLoading(false))
-
-    setTimeout(() => {
-      setCategories((p) => [...p, { id: generateId(), ...form }])
-      setForm({ categoryName: '', description: '' })
-      setLoading(false)
-      showToast('Category added successfully!')
-    }, 600)
+    addCategory(form)
+      .then((res) => {
+        setCategories((p) => [...p, res.data])
+        setForm({ categoryName: '', description: '' })
+        showToast('Category added successfully!')
+      })
+      .catch(() => showToast('Failed to add category', 'error'))
+      .finally(() => setLoading(false))
   }
 
   const handleDelete = (id: number) => {
-    // ── SWAP: uncomment to use real API ──
-    // deleteCategory(id).then(() => setCategories((p) => p.filter((c) => c.id !== id)))
-
-    setCategories((p) => p.filter((c) => c.id !== id))
-    showToast('Category deleted')
+    deleteCategory(id)
+      .then(() => {
+        setCategories((p) => p.filter((c) => c.id !== id))
+        showToast('Category deleted')
+      })
+      .catch(() => showToast('Failed to delete category', 'error'))
   }
 
   return (
